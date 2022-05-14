@@ -1,6 +1,6 @@
 # SCP008
 
-Adds SCP-008 to the game. It's pretty simple and was made in about 2 hours.
+Adds SCP-008 to the game. It's pretty simple and was made in about 2 hours. If SCP-049-2 hits someone they get SCP-008. You can heal SCP-008 with a medkit (50% Chance) or SCP-500 (100% Chance). When you die with SCP-008 you turn into SCP-049-2 at your original position.
 
 ## Config
 
