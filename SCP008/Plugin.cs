@@ -46,7 +46,7 @@ namespace SCP008
         public override string Name { get; } = "SCP008";
         public override string Prefix { get; } = "scp008";
         public override string Author { get; } = "Simyon";
-        public override Version Version { get; } = new Version(1, 0, 0);
+        public override Version Version { get; } = new Version(1, 0, 1);
         public override PluginPriority Priority { get; } = PluginPriority.High;
 
         public List<Player> infectedPlayers = new List<Player>();
@@ -134,17 +134,20 @@ namespace SCP008
 
         public void UsingItem(UsedItemEventArgs ev)
         {
-            if (ev.Item.Type == ItemType.SCP500)
+            if (infectedPlayers.Contains(ev.Player))
             {
-                Heal008(ev.Player);
-                ev.Player.Broadcast(5, Config.CureMessage);
-            }
-            if (ev.Item.Type == ItemType.Medkit)
-            {
-                if (IsInChance(50))
+                if (ev.Item.Type == ItemType.SCP500)
                 {
-                    ev.Player.Broadcast(5, Config.CureMessage);
                     Heal008(ev.Player);
+                    ev.Player.Broadcast(5, Config.CureMessage);
+                }
+                if (ev.Item.Type == ItemType.Medkit)
+                {
+                    if (IsInChance(50))
+                    {
+                        ev.Player.Broadcast(5, Config.CureMessage);
+                        Heal008(ev.Player);
+                    }
                 }
             }
         }
