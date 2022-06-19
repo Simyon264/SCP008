@@ -12,6 +12,9 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\..\exiled\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
+    <Reference Include="Mirror">
+      <HintPath>..\..\exiled\Mirror.dll</HintPath>
+    </Reference>
     <Reference Include="System.Threading" />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\exiled\UnityEngine.CoreModule.dll</HintPath>
