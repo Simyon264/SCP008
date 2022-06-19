@@ -36,22 +36,35 @@ namespace SCP008
         [Description("The message when you get infected with SCP-008")]
         public string InfectMessage { get; set; } = "You were infected with SCP-008. Use a medkit or SCP-500 to heal yourself.";
 
+        public int InfectChance { get; set; } = 100;
+
         [Description("The message when you cure SCP-008")]
         public string CureMessage { get; set; } = "You cured SCP-008.";
         [Description("If you can get SCP-008 more then once. You get damage for all the stacks of SCP-008.")]
         public bool Stack008 { get; set; } = false;
+
+        [Description("Roles which wont get SCP-008")]
+        public List<RoleType> immuneRoles { get; set; } = new List<RoleType>() { RoleType.Tutorial };
     }
     public class Plugin : Plugin<Config>
     {
         public override string Name { get; } = "SCP008";
         public override string Prefix { get; } = "scp008";
         public override string Author { get; } = "Simyon";
-        public override Version Version { get; } = new Version(1, 0, 1);
+        public override Version Version { get; } = new Version(1, 0, 2);
         public override PluginPriority Priority { get; } = PluginPriority.High;
 
         public List<Player> infectedPlayers = new List<Player>();
 
         private Random random = new Random();
+
+        private static readonly Plugin InstanceValue = new Plugin();
+        private Plugin()
+        {
+
+        }
+
+        public static Plugin StaticInstance => InstanceValue;
 
         private bool IsInChance(int chance)
         {
@@ -108,7 +121,13 @@ namespace SCP008
                     //Log.Info($"Damage tick for: {player.Nickname}");
                     if (player.Role.Team != Team.SCP)
                     {
-                        player.Hurt(Config.DamageAmount, DamageType.Poison);
+                        if (Config.immuneRoles.Contains(player.Role))
+                        {
+                            infectedPlayers.Remove(player);
+                        } else
+                        {
+                            player.Hurt(Config.DamageAmount, DamageType.Poison);
+                        }
                     } else
                     {
                         infectedPlayers.Remove(player);
@@ -156,13 +175,31 @@ namespace SCP008
         {
             if (infectedPlayers.Contains(ev.Target))
             {
+                bool isInPocket = false;
+                if (ev.Target.IsInPocketDimension)
+                    isInPocket = true;
                 ev.IsAllowed = false;
                 Vector3 position = ev.Target.Position;
                 ev.Target.DropItems();
                 ev.Target.SetRole(RoleType.Scp0492, SpawnReason.Revived);
                 Timing.CallDelayed(1f, () =>
                 {
-                    ev.Target.Teleport(position);
+                    if (!isInPocket)
+                    {
+                        ev.Target.Teleport(position);
+                    } else
+                    {
+                        Vector3 scp049Pos = position;
+                        foreach (Player player in Player.List)
+                        {
+                            if (player.Role == RoleType.Scp049)
+                            {
+                                scp049Pos = player.Position;
+                                break;
+                            }
+                        }
+                        ev.Target.Teleport(scp049Pos);
+                    }
                     ev.Target.Broadcast(5, Config.SpawnMessage);
                     Heal008(ev.Target);
                 });
@@ -171,6 +208,7 @@ namespace SCP008
 
         public void Hurting(HurtingEventArgs ev)
         {
+            if (Config.immuneRoles.Contains(ev.Target.Role)) return;
             if (ev.Handler.Type == DamageType.Poison) return;
             if (ev.Attacker == null) return;
             if (ev.Attacker.Role == RoleType.Scp0492)
@@ -178,8 +216,11 @@ namespace SCP008
                 if (ev.Target.Role.Team != Team.SCP)
                 {
                     if (infectedPlayers.Contains(ev.Target) && Config.Stack008 == false) return;
-                    Infect(ev.Target);
-                    ev.Target.Broadcast(5, Config.InfectMessage);
+                    if (IsInChance(Config.InfectChance))
+                    {
+                        Infect(ev.Target);
+                        ev.Target.Broadcast(5, Config.InfectMessage);
+                    }
                 }
             }
         }
